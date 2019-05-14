@@ -20,11 +20,10 @@ module.exports = {
         new HtmlWebpackPlugin({
             hash: true,
             filename: 'index.html', //relative to root of the application,
-            template: './src/index.html'
+            template: path.resolve(__dirname, 'src/', 'index.html'),
         })
    ],
-    output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'dist')
-    }
+   output: {
+    filename: './bundle.js'
+  }
 };
