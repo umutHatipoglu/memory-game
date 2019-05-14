@@ -20,7 +20,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             hash: true,
             filename: 'index.html', //relative to root of the application,
-            template: 'index.html'
+            template: './src/index.html'
         })
    ],
     output: {
