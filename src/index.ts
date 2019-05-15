@@ -1,3 +1,7 @@
+import './css/app.css';
+import './img/geometry2.png';
+
+console.log('test');
 /*
  * Create a list that holds all of your cards
  */
