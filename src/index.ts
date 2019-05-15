@@ -1,7 +1,14 @@
 import './css/app.css';
 import './img/geometry2.png';
 
+import {map} from 'lodash/fp';
+
 console.log('test');
+
+const arr = [1,3,4,5];
+
+map((num)=>console.log(num), arr);
+
 /*
  * Create a list that holds all of your cards
  */
