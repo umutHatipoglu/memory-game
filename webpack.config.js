@@ -18,7 +18,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            hash: false,
+            hash: true,
             filename: 'index.html', //relative to root of the application,
             template: path.resolve(__dirname, 'src/', 'index.html'),
         })
