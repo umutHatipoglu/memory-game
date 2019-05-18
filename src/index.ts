@@ -28,12 +28,8 @@ const openAndShowCard = (event:any) => {
         attempt = 0;
     }
     const matchedCardList = document.querySelectorAll('.match');
-    var dialog = document.getElementById("winnerModal");
-        dialog.className += " in";
-        dialog.style.display = "block";
     if(matchedCardList.length === cardList.length){
-        const winnerModal:any = document.getElementById('winnerModal');
-        winnerModal.modal("toggle");
+        //TODO: Implement modal
     }
 }
 
