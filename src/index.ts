@@ -1,13 +1,85 @@
 import './css/app.css';
 import './img/geometry2.png';
+import {map, forEach, isEqual} from 'lodash/fp';
+import {fromEvent} from 'rxjs';
 
-import {map} from 'lodash/fp';
+let cardList:NodeListOf<Element> = document.querySelectorAll('.card');
+let gameCards: Element[];
+let evaluatedGameCards: any[] = [];
+let attempt = 0;
+let visibleAttempt = 0;
 
-console.log('test');
+const deck = document.querySelector('.deck');
+const moves = document.querySelector('.moves');
 
-const arr = [1,3,4,5];
 
-map((num)=>console.log(num), arr);
+const restartButton:Element = document.querySelector('.restart');
+const restart$ = fromEvent(restartButton, 'click');
+
+const openAndShowCard = (event:any) => {
+    attempt++;
+    visibleAttempt++;
+    moves.textContent = visibleAttempt.toString();
+    event.target.classList.add('open', 'show');
+    evaluatedGameCards.push(event.target);
+    console.log(event.target);
+    if(attempt % 2 === 0){
+        setTimeout(()=> evaluateMatchCase(), 500);
+        attempt = 0;
+    }
+    const matchedCardList = document.querySelectorAll('.match');
+    var dialog = document.getElementById("winnerModal");
+        dialog.className += " in";
+        dialog.style.display = "block";
+    if(matchedCardList.length === cardList.length){
+        const winnerModal:any = document.getElementById('winnerModal');
+        winnerModal.modal("toggle");
+    }
+}
+
+const addClickEventToCards = (cardList:NodeListOf<Element>) => {
+    forEach((card:Element) => {
+        card.addEventListener('click', openAndShowCard);
+    }, cardList);
+}
+
+addClickEventToCards(cardList);
+
+restart$.subscribe(()=>{
+    gameCards = map((card:Element) => card, cardList);
+    suffleCards(gameCards);
+    cardList = document.querySelectorAll('.card');
+    addClickEventToCards(cardList);
+    attempt = 0;
+    visibleAttempt = 0;
+    moves.textContent = visibleAttempt.toString();
+})
+
+
+const evaluateMatchCase = () => {
+    const first = evaluatedGameCards[0].getElementsByTagName('i')[0].classList.toString();
+    const second = evaluatedGameCards[1].getElementsByTagName('i')[0].classList.toString();
+    if(!isEqual(first, second)){
+        forEach((card:Element)=>{
+            card.classList.remove('show', 'open');
+        }, evaluatedGameCards);
+    }else{
+        forEach((card:Element)=>{
+            card.classList.add('match');
+        }, evaluatedGameCards);
+    }
+    evaluatedGameCards = [];
+}
+
+
+const removeClassStyles = (list:any) => {
+    forEach((card:Element)=>{
+        card.classList.remove('show', 'open', 'match');
+       deck.removeChild(card);
+    }, list);
+}
+
+
 
 /*
  * Create a list that holds all of your cards
@@ -20,6 +92,16 @@ map((num)=>console.log(num), arr);
  *   - loop through each card and create its HTML
  *   - add each card's HTML to the page
  */
+
+const suffleCards = (list:Element[]) => {
+    //Remove card from document
+    removeClassStyles(list);
+    //Add again with random order
+    const shuffledList = shuffle(list);
+    forEach((card:Element)=>{
+        deck.appendChild(card);
+     }, shuffledList);
+}
 
 // Shuffle function from http://stackoverflow.com/a/2450976
 function shuffle(array:any) {
