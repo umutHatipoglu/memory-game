@@ -1,35 +1,131 @@
 import './css/app.css';
 import './img/geometry2.png';
-import {map, forEach, isEqual} from 'lodash/fp';
-import {fromEvent} from 'rxjs';
+import {map, forEach, isEqual, intersection} from 'lodash/fp';
+import {fromEvent, interval, BehaviorSubject, combineLatest} from 'rxjs';
+import {takeUntil, filter} from 'rxjs/operators'
 
-let cardList:NodeListOf<Element> = document.querySelectorAll('.card');
 let gameCards: Element[];
 let evaluatedGameCards: any[] = [];
 let attempt = 0;
 let visibleAttempt = 0;
 
+const timer$:BehaviorSubject<number> = new BehaviorSubject(0);
+const interval$ = interval(1000);
+const isFinish$:BehaviorSubject<boolean> = new BehaviorSubject(false);
+const falseAttempt$:BehaviorSubject<number> = new BehaviorSubject(0);
+
+let cardList:NodeListOf<Element> = document.querySelectorAll('.card');
 const deck = document.querySelector('.deck');
 const moves = document.querySelector('.moves');
+const timerEl = document.querySelector('.timer');
+const modal = document.getElementById("myModal");
+const modalCloseButton = document.querySelector('.btn-primary.close');
+const modalPlayButton = document.querySelector('.btn-primary.play');
+const totalMoves = document.querySelector('.total-moves');
+const restartButton = document.querySelector('.restart');
+const score = document.querySelector('.score');
 
+modalCloseButton.addEventListener('click', ()=> modal.style.display = "none");
+modalPlayButton.addEventListener('click', ()=> {
+    modal.style.display = "none";
+    resetGame();
+});
 
-const restartButton:Element = document.querySelector('.restart');
 const restart$ = fromEvent(restartButton, 'click');
 
+const removeCardElements = (list:any) => {
+    forEach((card:Element)=>{
+        card.classList.remove('show', 'open', 'match');
+       deck.removeChild(card);
+    }, list);
+}
+
+const suffleCards = (list:Element[]) => {
+    //Remove card from document
+    removeCardElements(list);
+    //Add again with random order
+    const shuffledList = shuffle(list);
+    forEach((card:Element)=>{
+        deck.appendChild(card);
+     }, shuffledList);
+}
+
+const initiliazeSuffleGame = () => {
+    gameCards = map((card:Element) => card, cardList);
+    suffleCards(gameCards);
+}
+
 const openAndShowCard = (event:any) => {
-    attempt++;
-    visibleAttempt++;
-    moves.textContent = visibleAttempt.toString();
-    event.target.classList.add('open', 'show');
-    evaluatedGameCards.push(event.target);
-    console.log(event.target);
-    if(attempt % 2 === 0){
-        setTimeout(()=> evaluateMatchCase(), 500);
-        attempt = 0;
+    const unique = intersection(event.currentTarget.classList, ['open', 'show', 'match']);
+    if(unique.length === 0){
+        attempt++;
+        visibleAttempt++;
+        moves.textContent = visibleAttempt.toString();
+        event.target.classList.add('open', 'show');
+        evaluatedGameCards.push(event.target);
+        if(attempt % 2 === 0){
+            setTimeout(()=> evaluateMatchCase(), 500);
+            attempt = 0;
+        }   
     }
+}
+
+//Check game is finish and show modal
+const checkGameIsFinish = () => {
     const matchedCardList = document.querySelectorAll('.match');
     if(matchedCardList.length === cardList.length){
-        //TODO: Implement modal
+        modal.style.display = "block";
+        totalMoves.textContent = (timer$.getValue()).toString();
+        isFinish$.next(true);
+        const starEl = map((star)=>star.cloneNode(true), document.querySelectorAll('.fa-star'));
+        forEach((star) => {
+            score.appendChild(star);
+        }, starEl)
+    }
+}
+
+const evaluateMatchCase = () => {
+    if(evaluatedGameCards.length === 2){
+        const first = evaluatedGameCards[0].getElementsByTagName('i')[0].classList.toString();
+        const second = evaluatedGameCards[1].getElementsByTagName('i')[0].classList.toString();
+        if(!isEqual(first, second)){
+            const currentFalseAttempt = falseAttempt$.getValue();
+            falseAttempt$.next(currentFalseAttempt + 1);
+            forEach((card:Element)=>{
+                card.classList.remove('show', 'open');
+            }, evaluatedGameCards);
+        }else{
+            forEach((card:Element)=>{
+                card.classList.add('match');
+            }, evaluatedGameCards);
+        }
+        evaluatedGameCards = [];
+    }
+    checkGameIsFinish();
+}
+
+//reset game states
+const resetGame = () => {
+    initiliazeSuffleGame();
+    cardList = document.querySelectorAll('.card');
+    addClickEventToCards(cardList);
+    attempt = 0;
+    visibleAttempt = 0;
+    moves.textContent = visibleAttempt.toString();
+    evaluatedGameCards = [];
+    isFinish$.next(false);
+    timer$.next(0);
+    falseAttempt$.next(0);
+    resetStars();
+}
+
+//Add star elements after reseting the game
+const resetStars = () => {
+    const starWrapper = document.querySelector('.stars');
+    const currentStarNumber = document.querySelectorAll('.stars .fa-star').length;
+    for(let i = currentStarNumber; i < 3; i++){
+        const starEl = document.querySelector('.fa-star').parentNode.cloneNode(true);
+        starWrapper.appendChild(starEl);
     }
 }
 
@@ -39,65 +135,36 @@ const addClickEventToCards = (cardList:NodeListOf<Element>) => {
     }, cardList);
 }
 
+initiliazeSuffleGame();
 addClickEventToCards(cardList);
 
-restart$.subscribe(()=>{
-    gameCards = map((card:Element) => card, cardList);
-    suffleCards(gameCards);
-    cardList = document.querySelectorAll('.card');
-    addClickEventToCards(cardList);
-    attempt = 0;
-    visibleAttempt = 0;
-    moves.textContent = visibleAttempt.toString();
-})
-
-
-const evaluateMatchCase = () => {
-    const first = evaluatedGameCards[0].getElementsByTagName('i')[0].classList.toString();
-    const second = evaluatedGameCards[1].getElementsByTagName('i')[0].classList.toString();
-    if(!isEqual(first, second)){
-        forEach((card:Element)=>{
-            card.classList.remove('show', 'open');
-        }, evaluatedGameCards);
-    }else{
-        forEach((card:Element)=>{
-            card.classList.add('match');
-        }, evaluatedGameCards);
+// Update star based on number of falseAttempts 
+falseAttempt$.subscribe((attemptNumber)=>{
+    const starsWrapper = document.querySelector('.stars');
+    const starEl = document.querySelectorAll('.fa-star');
+    if(starEl.length > 1 && attemptNumber > 0 && attemptNumber % 5 === 0){
+        starsWrapper.removeChild(starEl[0].parentNode);
     }
-    evaluatedGameCards = [];
-}
+});
 
+restart$.subscribe(()=>{
+    resetGame();
+});
 
-const removeClassStyles = (list:any) => {
-    forEach((card:Element)=>{
-        card.classList.remove('show', 'open', 'match');
-       deck.removeChild(card);
-    }, list);
-}
+//Timer implementation
+combineLatest(
+    interval$,
+    isFinish$
+).pipe(
+    filter(([ , isFinish]) => !isFinish)
+).subscribe(([]) => {
+    const currentTime = timer$.getValue();
+    timer$.next(currentTime + 1);
+});
 
-
-
-/*
- * Create a list that holds all of your cards
- */
-
-
-/*
- * Display the cards on the page
- *   - shuffle the list of cards using the provided "shuffle" method below
- *   - loop through each card and create its HTML
- *   - add each card's HTML to the page
- */
-
-const suffleCards = (list:Element[]) => {
-    //Remove card from document
-    removeClassStyles(list);
-    //Add again with random order
-    const shuffledList = shuffle(list);
-    forEach((card:Element)=>{
-        deck.appendChild(card);
-     }, shuffledList);
-}
+timer$.subscribe((time)=>{
+    timerEl.textContent = time.toString();
+});
 
 // Shuffle function from http://stackoverflow.com/a/2450976
 function shuffle(array:any) {
@@ -113,15 +180,3 @@ function shuffle(array:any) {
 
     return array;
 }
-
-
-/*
- * set up the event listener for a card. If a card is clicked:
- *  - display the card's symbol (put this functionality in another function that you call from this one)
- *  - add the card to a *list* of "open" cards (put this functionality in another function that you call from this one)
- *  - if the list already has another card, check to see if the two cards match
- *    + if the cards do match, lock the cards in the open position (put this functionality in another function that you call from this one)
- *    + if the cards do not match, remove the cards from the list and hide the card's symbol (put this functionality in another function that you call from this one)
- *    + increment the move counter and display it on the page (put this functionality in another function that you call from this one)
- *    + if all cards have matched, display a message with the final score (put this functionality in another function that you call from this one)
- */

@@ -21,11 +21,18 @@
         		<li><i class="fa fa-star"></i></li>
         	</ul>
 
-        	<span class="moves">3</span> Moves
+        	<span class="moves">0</span> Moves
 
+            
             <div class="restart">
-        		<i class="fa fa-repeat"></i>
-        	</div>
+                <i class="fa fa-repeat"></i>
+            </div>
+
+            <div class="counter">
+                <span class="timer">0</span> sec
+            </div>
+           
+
         </section>
 
         <ul class="deck">
@@ -79,5 +86,28 @@
             </li>
         </ul>
     </div>
-<script type="text/javascript" src="bundle.js?78b8c871495ba7c38953"></script></body>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Congradulation
+            </div>
+            <p>You win the Memory Game</p>
+            <span>Total time: </span><span class="total-moves">0</span> sec
+            <p>Score: </p><span class="score"></span> 
+
+
+            <div class="modal-footer">
+                <div class="button-wrapper">
+                    <button type="button" class="btn btn-primary play">Play Again</button>
+                    <button type="button" class="btn btn-primary close">Close</button>
+                </div>
+            </div>
+        </div>
+      </div>
+      
+
+<script type="text/javascript" src="bundle.js?5c83542c4fa12b4d69a2"></script></body>
 </html>
+
