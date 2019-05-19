@@ -16,6 +16,10 @@ You can find the running implementation in following link: https://umuthatipoglu
 * npm install
 * npm start
 
+### How star scoring calculation implemented
+
+Every 5 wrong matching attempt removes one star from user score.
+
 ## Authors
 
 * **Umut Hatipoglu** - [Github](https://github.com/umutHatipoglu)
