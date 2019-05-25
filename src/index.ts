@@ -2,12 +2,13 @@ import './css/app.css';
 import './img/geometry2.png';
 import {map, forEach, isEqual, intersection} from 'lodash/fp';
 import {fromEvent, interval, BehaviorSubject, combineLatest} from 'rxjs';
-import {takeUntil, filter} from 'rxjs/operators'
+import {filter} from 'rxjs/operators'
 
 let gameCards: Element[];
 let evaluatedGameCards: any[] = [];
 let attempt = 0;
 let visibleAttempt = 0;
+let isProcessing = false;
 
 const timer$:BehaviorSubject<number> = new BehaviorSubject(0);
 const interval$ = interval(1000);
@@ -56,17 +57,20 @@ const initiliazeSuffleGame = () => {
 }
 
 const openAndShowCard = (event:any) => {
-    const unique = intersection(event.currentTarget.classList, ['open', 'show', 'match']);
-    if(unique.length === 0){
-        attempt++;
-        visibleAttempt++;
-        moves.textContent = visibleAttempt.toString();
-        event.target.classList.add('open', 'show');
-        evaluatedGameCards.push(event.target);
-        if(attempt % 2 === 0){
-            setTimeout(()=> evaluateMatchCase(), 500);
-            attempt = 0;
-        }   
+    if(!isProcessing){
+        const unique = intersection(event.currentTarget.classList, ['open', 'show', 'match']);
+        if(unique.length === 0){
+            attempt++;
+            visibleAttempt++;
+            moves.textContent = visibleAttempt.toString();
+            event.target.classList.add('open', 'show');
+            evaluatedGameCards.push(event.target);
+            if(attempt % 2 === 0){
+                isProcessing = true;
+                setTimeout(()=> evaluateMatchCase(), 500);
+                attempt = 0;
+            }   
+        }
     }
 }
 
@@ -101,6 +105,7 @@ const evaluateMatchCase = () => {
         }
         evaluatedGameCards = [];
     }
+    isProcessing = false;
     checkGameIsFinish();
 }
 
