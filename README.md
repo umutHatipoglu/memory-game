@@ -4,7 +4,7 @@ Memory game implementation
 
 ## Running implementation
 
-You can find the running implementation in following link: https://umuthatipoglu.github.io/udacity-project2/
+You can find the running implementation in following link: https://umuthatipoglu.github.io/memory-game/
 
 ### Prerequisites
 
